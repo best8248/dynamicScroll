@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>dynamicScroll</title>
+    </head>
+    <body>
+        <div id="scroll-area">
+
+        </div>
+    </body>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        #scroll-area {
+            width: 400px;
+            height: 500px;
+            overflow-y: auto;
+        }
+        div {
+            margin: 0;
+            padding: 0;
+        }
+        input {
+            width: 100%;
+            height: 50px;
+            box-sizing: border-box;
+        }
+    </style>
+    <script>
+        const clu = 4;
+        // data init
+        const height = 50 ;
+        const display_count = 10;
+        var index = 1;
+        const eventPosition = {upscrollposition: 0, downscrollposition: 0};
+        const extraArea = {top:0, bottom:0};
+        // call generateTempDataFunction
+        const data = generateInitDataArr()
+        
+        // generateTempDataFunction
+        function generateInitDataArr() {
+            var data = [];
+            for(let i = 0; i < 100000; i++) {
+                data.push({value:i, placeholder:i});
+            }
+            return data;
+        }
+        callProcess(1)
+
+      
+        // 1: init 2: downProcess 3:upProcess
+        function callProcess(initflag) {
+            removeScrollEvent();
+            // 1. 
+            setScrolleventPostion();
+            // 2. 
+            calcExtraArea();
+            // 3. 
+            if(initflag === 1) {
+                createData();
+            }else {
+                updateData();
+            }
+            // 4. 
+            setScrollPostion(initflag);
+            addScrollEvent()
+        }
+        // calc extra area
+        function calcExtraArea() {
+            let itemheight = (clu-1)*display_count*height;
+            extraArea.top = (index-1)*itemheight;
+            extraArea.bottom = (data.length-display_count)*height-itemheight-extraArea.top;
+        }
+        // calc scroll event postion
+         function setScrolleventPostion() {
+            let itemheight = (clu-1)*display_count*height;
+            eventPosition.upscrollposition = (index-1)*itemheight;
+            eventPosition.downscrollposition = index*itemheight;
+            
+        }
+        // createData
+        function createData() {
+            const _tag = document.getElementById('scroll-area');
+            var extraUP = document.createElement('div');
+            extraUP.id = "extraup";
+            extraUP.style.display = "hidden";
+            extraUP.style.height = extraArea.top+'px';
+            _tag.appendChild(extraUP);
+            for (let i = 0; i < clu*display_count; i++) {
+                var tag = document.createElement('input');
+                tag.classList.add('items');
+                tag.id = "item-"+i;
+                tag.placeholder = data[i].placeholder;
+                tag.value = data[i].value;
+                tag.addEventListener('input', inputChangeEvent);
+                _tag.appendChild(tag);
+            }
+            var extraDown = document.createElement('div');
+            extraDown.id = "extradown";
+            extraDown.style.display = "hidden";
+            extraDown.style.height = extraArea.bottom+'px';
+            _tag.appendChild(extraDown);
+        }
+        // updateData
+        function updateData() {
+            const _uptag = document.getElementById('extraup');
+            _uptag.style.height = extraArea.top+'px';
+            const _downtag = document.getElementById('extradown');
+            _downtag.style.height = extraArea.bottom+'px';
+            const _tag = document.getElementsByClassName('items');
+            let _i = 0;
+            for (let i = (index-1)*(clu-1)*display_count; i < (clu-1)*index*display_count+display_count; i++) {
+                _tag[_i].placeholder = data[i].placeholder;
+                _tag[_i].value = data[i].value;
+                _tag[_i].id = "item-"+i;
+                _i++;
+            }
+        }
+        
+        function setScrollPostion(initflag) {
+            let itemheight = (clu-1)*display_count*height;
+            const _tag = document.getElementById('scroll-area');
+            if(initflag===2)
+                _tag.scrollTo(0, itemheight*(index-1));
+            else if(initflag == 3)
+                _tag.scrollTo(0, itemheight*(index));
+        }
+
+        function scrollEvent() {
+            if(this.scrollTop < eventPosition.upscrollposition) {
+                index--;
+                callProcess(3);
+            }else if(this.scrollTop > eventPosition.downscrollposition) {
+                index++;
+                callProcess(2);
+            }
+        }
+        function inputChangeEvent() {
+            const arrNum = this.id.split("-")[1]
+            data[arrNum].value = this.value;
+        }
+        function addScrollEvent() {
+            const _tag = document.getElementById('scroll-area');
+            _tag.addEventListener("scroll", scrollEvent);
+        }
+        function removeScrollEvent() {
+            const _tag = document.getElementById('scroll-area');
+            _tag.removeEventListener("scroll", scrollEvent);
+        }
+    </script>
+</html>
